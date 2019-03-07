@@ -13,17 +13,13 @@ class NoLightSinatra < Sinatra::Base
   use Airbrake::Rack::Middleware unless ENV['RACK_ENV'] == 'test'
   enable  :sessions
 
-  use OmniAuth::Builder do
-    provider :mlh, ENV['MY_MLH_KEY'], ENV['MY_MLH_SECRET'], scope: 'default'
-  end
-
   set public_folder: 'public', static: true
 
   configure do
     DEFAULT_BRANDING = ''
     ENVIRONMENTS = {
-      'development' => { 'uri' => 'mongodb://localhost/no_light_development' },
-      'test'        => { 'uri' => 'mongodb://localhost/no_light_test' },
+      'development' => { 'uri' => 'mongodb://192.168.0.40/no_light_development' },
+      'test'        => { 'uri' => 'mongodb://192.168.0.40/no_light_test' },
       'production'  => { 'uri' => ENV['MONGODB_URI'] }
     }
 
@@ -39,80 +35,44 @@ class NoLightSinatra < Sinatra::Base
     erb :default_page
   end
 
-  get '/auth/mlh/callback' do
-    auth = request.env["omniauth.auth"]
-    session[:user_id] = auth["uid"]
-    session[:full_name] = "#{auth[:info][:first_name]} #{auth[:info][:last_name]}"
-    next_page = session[:redirect]
-
-    if next_page
-      session[:redirect] = nil
-      redirect '%s' % next_page
-    else
-      redirect '/'
-    end
-  end
-
-  get '/logout' do
-    session.clear
-    redirect '/'
-  end
-
+  
   post '/submit' do
-    authorize do
-      @submission = Submission.new(get_submit_params)
-
-      if @submission.already_exists?
-        erb :error, locals: { 
-          title: "Error - Already Submitted", 
-          message: "You have already submitted this code under your name (\"#{@submission.name}\")." 
-        }
-      else
-        @submission.save
-        erb :submitted
-      end
+    @submission = Submission.new(get_submit_params)
+    if @submission.already_exists?
+      erb :error, locals: { 
+        title: "Error - Already Submitted", 
+        message: "You have already submitted this code under your name (\"#{@submission.name}\")." 
+      }
+    else
+      @submission.save
+      erb :submitted
     end
   end
 
   get '/:hackathon.zip' do
-    authorize do
-      @submissions = Submission.by_hackathon(params[:hackathon])
+    @submissions = Submission.by_hackathon(params[:hackathon])
 
-      if @submissions.count > 0
-        create_zip_folder(@submissions)
-        set_response_headers
-        download_zip_folder
-      else
-        erb :error, locals: { 
-          title: "Error - No Submissions", 
-          message: "We did not receive any submissions for your event (\"#{params[:hackathon]}\")." 
-        }
-      end
+    if @submissions.count > 0
+      create_zip_folder(@submissions)
+      set_response_headers
+      download_zip_folder
+    else
+      erb :error, locals: { 
+        title: "Error - No Submissions", 
+        message: "We did not receive any submissions for your event (\"#{params[:hackathon]}\")." 
+      }
     end
   end
 
   get '/:hackathon' do
-    authorize do
-      show_editor(DEFAULT_BRANDING)
-    end
+    show_editor(DEFAULT_BRANDING)
   end
 
   get '/:hackathon/:branding?' do
-    authorize do
-      show_editor(params[:branding])
-    end
+    show_editor(params[:branding])
   end
 
   private
-
-  def authorize
-    if session[:user_id]
-      yield
-    else
-      session[:redirect] = request.fullpath
-      redirect '/auth/mlh'
-    end
-  end
 
   def show_editor(custom_branding)
     @body_class = ['editor', custom_branding].join(' ')
@@ -127,7 +87,7 @@ class NoLightSinatra < Sinatra::Base
     get_submit_params = params[:submission] || {}
     get_submit_params.merge({
       'seconds' => seconds_from(params[:submission][:seconds]),
-      'name' => session[:full_name]
+      'name' => params[:submission][:name]
     })
   end
 

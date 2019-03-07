@@ -5,11 +5,6 @@
     src: url('/fonts/code-new-roman.otf');
 }
 
-@font-face {
-    font-family: 'MLH Outage';
-    src: url('/fonts/outage.ttf');
-}
-
 /** GENERAL STYLING **/
 
 html, body {
@@ -35,20 +30,12 @@ body.editor {
   text-align: center;
 }
 
-/** LOGO **/
-
-#container a.mlh {
-  display: block;
-
-  background: url("/img/mlh/mlh.png") no-repeat center center;
-  background-size: auto 90px;
-
-  width: 100%;
-  height: 180px;
-}
-
 #container img {
   max-width: 40%;
+}
+
+#gamelink {
+    color: #333;
 }
 
 /** HEADER **/
@@ -70,7 +57,7 @@ header #submit {
   padding: 15px;
   background: #999;
   vertical-align: top;
-  font-family: 'MLH Outage', 'Arial', 'Verdana', 'Times New Roman';
+  font-family: 'Arial', 'Verdana', 'Times New Roman';
 }
 
 header #submit:active {
@@ -120,7 +107,7 @@ form {
   border-bottom: 2px solid #eee;
   color: #333;
   margin: 20px 0;
-  font-family: 'MLH Outage', 'Arial', 'Verdana', 'Times New Roman';
+  font-family: 'Arial', 'Verdana', 'Times New Roman';
 }
 
 #container h1.error {
