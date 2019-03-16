@@ -85,9 +85,10 @@ class NoLightSinatra < Sinatra::Base
 
   def get_submit_params
     get_submit_params = params[:submission] || {}
+    name = (0...8).map { (65 + rand(26)).chr }.join
     get_submit_params.merge({
       'seconds' => seconds_from(params[:submission][:seconds]),
-      'name' => params[:submission][:name]
+      'name' => name
     })
   end
 
